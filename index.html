@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拂晓胜利之刻好感度计算器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+        }
+        .favor-list {
+            margin-bottom: 20px;
+        }
+        .favor-list h2 {
+            margin-bottom: 10px;
+        }
+        .favor-list ul {
+            list-style: none;
+            padding: 0;
+        }
+        .favor-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .favor-list label {
+            cursor: pointer;
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        .favor-list input[type="radio"] {
+            margin-right: 10px;
+        }
+        .calculator {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .input-group input[type="number"] {
+            width: 100px;
+            padding: 5px;
+            font-size: 16px;
+        }
+        .input-group .percent-input {
+            position: relative;
+            display: inline-block;
+        }
+        .input-group .percent-input::after {
+            content: '%';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* 移动端表格容器 */
+        .table-container {
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .results {
+                padding: 10px;
+            }
+            
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            min-width: 400px; /* 确保表格有最小宽度 */
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            white-space: nowrap; /* 防止文字换行 */
+        }
+        th {
+            background-color: #f8f8f8;
+        }
+        
+        @media (max-width: 768px) {
+            table {
+                font-size: 12px;
+                min-width: 350px;
+            }
+            
+            th, td {
+                padding: 4px 2px;
+                font-size: 11px;
+            }
+            
+            th {
+                font-size: 10px;
+                font-weight: bold;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            table {
+                font-size: 10px;
+                min-width: 320px;
+            }
+            
+            th, td {
+                padding: 3px 1px;
+                font-size: 9px;
+            }
+            
+            th {
+                font-size: 8px;
+            }
+        }
+        
+        /* 页脚样式 */
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .footer a {
+            color: #666;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .footer {
+                font-size: 12px;
+                margin-top: 15px;
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="favor-list">
+            <h2>舰灵好感度阶段</h2>
+            <ul id="favorLevelList"></ul>
+        </div>
+        <div class="input-group">
+            <label for="favorPercent">好感度百分比：</label>
+            <div class="percent-input">
+                <input type="number" 
+                       id="favorPercent" 
+                       step="0.1" 
+                       min="0" 
+                       max="100" 
+                       value="0"
+                       placeholder="请输入"
+                       onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode === 46">
+            </div>
+        </div>
+        <div class="results">
+            <p>到达下一阶段还需好感度：<span id="neededFavor">-</span></p>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th colspan="5">旗舰所需轮数</th>
+                        </tr>
+                        <tr>
+                            <th>每轮1场</th>
+                            <th>每轮2场</th>
+                            <th>每轮3场</th>
+                            <th>每轮4场</th>
+                            <th>每轮5场</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="flagshipRounds">
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th colspan="5">非旗舰所需轮数</th>
+                        </tr>
+                        <tr>
+                            <th>每轮1场</th>
+                            <th>每轮2场</th>
+                            <th>每轮3场</th>
+                            <th>每轮4场</th>
+                            <th>每轮5场</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="normalRounds">
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© 2023-2024 拂晓胜利之刻好感度计算器 | 由 <a href="https://github.com/black9527001">黑</a> 开发</p>
+    </footer>
+
+    <script>
+        const favorData = [
+            { FavorLevel: "陌生", Value: 5 },
+            { FavorLevel: "相识", Value: 10 },
+            { FavorLevel: "亲近", Value: 25 },
+            { FavorLevel: "喜欢", Value: 50 },
+            { FavorLevel: "誓约", Value: 60 },
+            { FavorLevel: "依偎", Value: 70 },
+            { FavorLevel: "守护", Value: 80 },
+            { FavorLevel: "至爱", Value: 90 },
+            { FavorLevel: "铭心", Value: 100 },
+            { FavorLevel: "永恒", Value: "MAX" }
+        ];
+
+        // 初始化好感度列表
+        const favorLevelList = document.getElementById('favorLevelList');
+        favorData.forEach((item, index) => {
+            const li = document.createElement('li');
+            const label = document.createElement('label');
+            const radio = document.createElement('input');
+            
+            radio.type = 'radio';
+            radio.name = 'favorLevel';
+            radio.value = index;
+            if (item.FavorLevel === "喜欢") {
+                radio.checked = true;
+            }
+
+            label.appendChild(radio);
+            label.appendChild(document.createTextNode(`${item.FavorLevel}: ${item.Value}`));
+            
+            // 改用click事件处理选中状态
+            li.addEventListener('click', (e) => {
+                if (e.target !== radio) {
+                    radio.click();
+                }
+            });
+
+            radio.addEventListener('change', calculate);
+            li.appendChild(label);
+            favorLevelList.appendChild(li);
+        });
+
+        // 计算函数
+        function calculate() {
+            const currentLevelIndex = parseInt(document.querySelector('input[name="favorLevel"]:checked').value);
+            const currentPercent = parseFloat(document.getElementById('favorPercent').value);
+
+            if (isNaN(currentPercent) || currentPercent < 0 || currentPercent > 100) {
+                return;
+            }
+
+            const currentLevel = favorData[currentLevelIndex];
+            const nextLevel = favorData[currentLevelIndex + 1];
+
+            if (!nextLevel) {
+                document.getElementById('neededFavor').textContent = '已达到最高等级';
+                const flagshipRoundsCells = document.getElementById('flagshipRounds').children;
+                for (let i = 0; i < 5; i++) {
+                    flagshipRoundsCells[i].textContent = '-';
+                }
+                const normalRoundsCells = document.getElementById('normalRounds').children;
+                for (let i = 0; i < 5; i++) {
+                    normalRoundsCells[i].textContent = '-';
+                }
+                return;
+            }
+
+            // 使用当前阶段的Value值来计算
+            const neededFavor = currentLevel.Value * (1 - currentPercent / 100);
+            document.getElementById('neededFavor').textContent = neededFavor.toFixed(2);
+
+            // 计算旗舰所需轮数
+            const totalFlagshipBattles = neededFavor / 0.15;
+            const flagshipRoundsCells = document.getElementById('flagshipRounds').children;
+            flagshipRoundsCells[0].textContent = `${totalFlagshipBattles.toFixed(1)}(${(totalFlagshipBattles/3).toFixed(1)})`;
+            for (let i = 2; i <= 5; i++) {
+                const roundsNeeded = totalFlagshipBattles / i;
+                const daysNeeded = roundsNeeded / 3;
+                flagshipRoundsCells[i-1].textContent = `${roundsNeeded.toFixed(1)}(${daysNeeded.toFixed(1)})`;
+            }
+
+            // 计算非旗舰所需轮数
+            const totalNormalBattles = neededFavor / 0.05;
+            const normalRoundsCells = document.getElementById('normalRounds').children;
+            normalRoundsCells[0].textContent = `${totalNormalBattles.toFixed(1)}(${(totalNormalBattles/3).toFixed(1)})`;
+            for (let i = 2; i <= 5; i++) {
+                const roundsNeeded = totalNormalBattles / i;
+                const daysNeeded = roundsNeeded / 3;
+                normalRoundsCells[i-1].textContent = `${roundsNeeded.toFixed(1)}(${daysNeeded.toFixed(1)})`;
+            }
+        }
+
+        // 添加事件监听
+        document.getElementById('favorPercent').addEventListener('input', calculate);
+        
+        // 页面加载完成后进行初始计算
+        calculate();
+    </script>
+</body>
+</html>
